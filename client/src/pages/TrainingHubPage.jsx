@@ -97,7 +97,7 @@ function TrainingHubPage({
   const guide = goalGuides[selectedGoal];
   const userStorageId = user?.id || user?._id || user?.email || 'member';
   const currentWeek = Number(localStorage.getItem(`fitness-ai-current-week-${userStorageId}`)) || 1;
-  const savedSettings = JSON.parse(localStorage.getItem(`fitness-ai-settings-${userStorageId}-Member-${currentWeek}`) || '{}');
+  const savedSettings = JSON.parse(localStorage.getItem(`fitness-ai-settings-${userStorageId}-Member`) || '{}');
   const savedBusyDays = JSON.parse(localStorage.getItem(`fitness-ai-busy-days-${userStorageId}-Member-${currentWeek}`) || '[]');
   const savedCompletedDays = JSON.parse(localStorage.getItem(`fitness-ai-completed-days-${userStorageId}-Member-${currentWeek}`) || '[]');
   const frequency = Number(savedSettings.frequency) || 5;

@@ -92,7 +92,7 @@ function ExerciseLibraryPage({ user }) {
   const basePlanDays = goalVideoDays[user?.goal] || [];
   const userStorageId = user?.id || user?._id || user?.email || 'member';
   const currentWeek = Number(localStorage.getItem(`fitness-ai-current-week-${userStorageId}`)) || 1;
-  const settingsStorageKey = `fitness-ai-settings-${userStorageId}-Member-${currentWeek}`;
+  const settingsStorageKey = `fitness-ai-settings-${userStorageId}-Member`;
   const scheduleStorageKey = `fitness-ai-busy-days-${userStorageId}-Member-${currentWeek}`;
   let savedSettings = {};
   let savedBusyDays = [];

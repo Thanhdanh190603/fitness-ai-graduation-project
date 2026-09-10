@@ -1,5 +1,12 @@
 import Exercise from '../models/Exercise.js';
 
+function isPublicVideoUrl(videoUrl) {
+  const value = String(videoUrl || '').trim().toLowerCase();
+  return /^https:\/\/(www\.)?(youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|vimeo\.com\/)/.test(value)
+    && !value.includes('private')
+    && !value.includes('/shorts/');
+}
+
 function formatExercise(exercise) {
   const data = exercise.toObject ? exercise.toObject() : exercise;
 
@@ -23,8 +30,8 @@ async function getExercises(req, res) {
       filter.level = level;
     }
 
-    const exercises = await Exercise.find(filter).sort({ createdAt: -1 });
-    res.json(exercises.map(formatExercise));
+    const exercises = await Exercise.find(filter).sort({ createdAt: 1 });
+    res.json(exercises.filter((exercise) => isPublicVideoUrl(exercise.videoUrl)).map(formatExercise));
   } catch (error) {
     res.status(500).json({ message: 'Lỗi lấy danh sách bài tập' });
   }
@@ -46,6 +53,10 @@ async function getExerciseById(req, res) {
 
 async function createExercise(req, res) {
   try {
+    if (!isPublicVideoUrl(req.body.videoUrl)) {
+      return res.status(400).json({ message: 'Video phải là đường dẫn YouTube/Vimeo công khai, không dùng video riêng tư.' });
+    }
+
     const exercise = await Exercise.create(req.body);
     res.status(201).json(exercise);
   } catch (error) {
@@ -55,6 +66,10 @@ async function createExercise(req, res) {
 
 async function updateExercise(req, res) {
   try {
+    if (req.body.videoUrl && !isPublicVideoUrl(req.body.videoUrl)) {
+      return res.status(400).json({ message: 'Video phải là đường dẫn YouTube/Vimeo công khai, không dùng video riêng tư.' });
+    }
+
     const exercise = await Exercise.findByIdAndUpdate(
       req.params.id,
       req.body,

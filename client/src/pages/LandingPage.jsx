@@ -9,11 +9,23 @@ function LandingPage({ onLoginSuccess, onVisitorDemo, initialAuthMode, language,
   const [showAuth, setShowAuth] = useState(false);
   const [form, setForm] = useState({
     fullName: '',
+    username: '',
     email: '',
+    phone: '',
+    dateOfBirth: '',
     password: '',
     confirmPassword: ''
   });
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('error');
+  const [resetStep, setResetStep] = useState('email');
+  const [resetForm, setResetForm] = useState({
+    email: '',
+    code: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [resetLoading, setResetLoading] = useState(false);
   const [selectedBlog, setSelectedBlog] = useState(null);
 
   useEffect(() => {
@@ -30,37 +42,133 @@ function LandingPage({ onLoginSuccess, onVisitorDemo, initialAuthMode, language,
     });
   }
 
+  function handleResetChange(event) {
+    setResetForm({
+      ...resetForm,
+      [event.target.name]: event.target.value
+    });
+  }
+
   function openAuth(nextMode) {
     setMode(nextMode);
     setShowAuth(true);
     setMessage('');
+    setMessageType('error');
+  }
+
+  function openForgotPassword() {
+    setMode('forgot');
+    setResetStep('email');
+    setResetForm({
+      email: form.email.includes('@') ? form.email : '',
+      code: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setMessage('');
+    setMessageType('error');
+  }
+
+  function backToLogin() {
+    setMode('login');
+    setMessage('');
+    setMessageType('error');
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage('');
+    setMessageType('error');
 
     if (mode === 'register' && form.password !== form.confirmPassword) {
       setMessage(isEnglish ? 'Passwords do not match' : 'Mật khẩu xác nhận không khớp');
       return;
     }
 
+    if (
+      mode === 'register' &&
+      (!form.fullName || !form.username || !form.email || !form.phone || !form.dateOfBirth)
+    ) {
+      setMessage(isEnglish ? 'Please fill in all registration fields' : 'Vui lòng nhập đủ thông tin đăng ký');
+      return;
+    }
+
     try {
       const url = mode === 'login' ? '/auth/login' : '/auth/register';
-      const payload =
-        mode === 'login'
-          ? { email: form.email, password: form.password }
-          : {
-              fullName: form.fullName,
-              email: form.email,
-              password: form.password,
-              confirmPassword: form.confirmPassword
-            };
+      const payload = mode === 'login'
+        ? { email: form.email, password: form.password }
+        : {
+            fullName: form.fullName,
+            username: form.username,
+            email: form.email,
+            phone: form.phone,
+            dateOfBirth: form.dateOfBirth,
+            password: form.password,
+            confirmPassword: form.confirmPassword
+          };
 
       const response = await api.post(url, payload);
       onLoginSuccess(response.data.user, mode);
     } catch (error) {
       setMessage(error.response?.data?.message || 'Có lỗi xảy ra');
+    }
+  }
+
+  async function handleForgotSubmit(event) {
+    event.preventDefault();
+    setMessage('');
+    setMessageType('error');
+    setResetLoading(true);
+
+    try {
+      if (resetStep === 'email') {
+        if (!resetForm.email.includes('@')) {
+          setMessage(isEnglish ? 'Enter a valid email' : 'Vui lòng nhập email hợp lệ');
+          return;
+        }
+
+        const response = await api.post('/auth/forgot-password', { email: resetForm.email });
+        setResetStep('code');
+        setMessage(response.data.message);
+        setMessageType('success');
+        return;
+      }
+
+      if (resetStep === 'code') {
+        const response = await api.post('/auth/verify-reset-code', {
+          email: resetForm.email,
+          code: resetForm.code
+        });
+        setResetStep('password');
+        setMessage(response.data.message);
+        setMessageType('success');
+        return;
+      }
+
+      if (resetForm.newPassword.length < 6) {
+        setMessage(isEnglish ? 'New password must have at least 6 characters' : 'Mật khẩu mới phải có ít nhất 6 ký tự');
+        return;
+      }
+
+      if (resetForm.newPassword !== resetForm.confirmPassword) {
+        setMessage(isEnglish ? 'Passwords do not match' : 'Mật khẩu xác nhận không khớp');
+        return;
+      }
+
+      const response = await api.post('/auth/reset-password', {
+        email: resetForm.email,
+        code: resetForm.code,
+        newPassword: resetForm.newPassword,
+        confirmPassword: resetForm.confirmPassword
+      });
+      setMode('login');
+      setForm({ ...form, email: resetForm.email, password: '', confirmPassword: '' });
+      setMessage(response.data.message);
+      setMessageType('success');
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Có lỗi xảy ra');
+    } finally {
+      setResetLoading(false);
     }
   }
 
@@ -264,30 +372,167 @@ function LandingPage({ onLoginSuccess, onVisitorDemo, initialAuthMode, language,
               ×
             </button>
             <p className="eyebrow">{isEnglish ? 'Welcome to Fitness AI' : 'Chào mừng đến với Fitness AI'}</p>
-            <h3 id="auth-title">{mode === 'login' ? (isEnglish ? 'Log in' : 'Đăng nhập') : (isEnglish ? 'Create an account' : 'Tạo tài khoản')}</h3>
+            <h3 id="auth-title">
+              {mode === 'login'
+                ? (isEnglish ? 'Log in' : 'Đăng nhập')
+                : mode === 'register'
+                  ? (isEnglish ? 'Create an account' : 'Tạo tài khoản')
+                  : (isEnglish ? 'Reset your password' : 'Khôi phục mật khẩu')}
+            </h3>
+
+            {mode === 'forgot' ? (
+              <form onSubmit={handleForgotSubmit}>
+                <p className="auth-helper-text">
+                  {resetStep === 'email'
+                    ? (isEnglish ? 'Enter your registered email to receive a verification code.' : 'Nhập email đã đăng ký để nhận mã xác minh 6 số.')
+                    : resetStep === 'code'
+                      ? (isEnglish ? 'Enter the code sent to your email.' : 'Nhập mã xác minh đã được gửi tới email của bạn.')
+                      : (isEnglish ? 'Create a new password for your account.' : 'Tạo mật khẩu mới cho tài khoản của bạn.')}
+                </p>
+
+                {resetStep === 'email' && (
+                  <label>
+                    Email đăng ký
+                    <input
+                      name="email"
+                      type="email"
+                      value={resetForm.email}
+                      onChange={handleResetChange}
+                      placeholder="user@gmail.com"
+                      autoFocus
+                      required
+                    />
+                  </label>
+                )}
+
+                {resetStep === 'code' && (
+                  <>
+                    <label>
+                      Mã xác minh
+                      <input
+                        name="code"
+                        inputMode="numeric"
+                        maxLength="6"
+                        value={resetForm.code}
+                        onChange={handleResetChange}
+                        placeholder="Nhập 6 chữ số"
+                        autoFocus
+                        required
+                      />
+                    </label>
+                    <small className="auth-muted-text">Mã chỉ có hiệu lực trong 10 phút.</small>
+                  </>
+                )}
+
+                {resetStep === 'password' && (
+                  <>
+                    <label>
+                      Mật khẩu mới
+                      <input
+                        name="newPassword"
+                        type="password"
+                        value={resetForm.newPassword}
+                        onChange={handleResetChange}
+                        placeholder="Ít nhất 6 ký tự"
+                        autoFocus
+                        required
+                      />
+                    </label>
+                    <label>
+                      Xác nhận mật khẩu mới
+                      <input
+                        name="confirmPassword"
+                        type="password"
+                        value={resetForm.confirmPassword}
+                        onChange={handleResetChange}
+                        placeholder="Nhập lại mật khẩu mới"
+                        required
+                      />
+                    </label>
+                  </>
+                )}
+
+                {message && <p className={messageType === 'success' ? 'form-success' : 'form-error'}>{message}</p>}
+
+                <button type="submit" disabled={resetLoading}>
+                  {resetLoading
+                    ? 'Đang xử lý...'
+                    : resetStep === 'email'
+                      ? 'Gửi mã xác minh'
+                      : resetStep === 'code'
+                        ? 'Xác minh mã'
+                        : 'Đặt lại mật khẩu'}
+                </button>
+              </form>
+            ) : (
             <form onSubmit={handleSubmit}>
               {mode === 'register' && (
                 <label>
-                  {isEnglish ? 'Full name' : 'Họ tên'}
+                  {isEnglish ? 'Full name' : 'Họ và tên'}
                   <input
                     name="fullName"
                     value={form.fullName}
                     onChange={handleChange}
                     placeholder="Nguyễn Văn A"
+                    required
+                  />
+                </label>
+              )}
+
+              {mode === 'register' && (
+                <label>
+                  {isEnglish ? 'Username' : 'Tên đăng nhập'}
+                  <input
+                    name="username"
+                    value={form.username}
+                    onChange={handleChange}
+                    placeholder="thanhdanh"
+                    required
                   />
                 </label>
               )}
 
               <label>
-                Email
+                {mode === 'login'
+                  ? (isEnglish ? 'Email or username' : 'Email hoặc tên đăng nhập')
+                  : 'Email'}
                 <input
                   name="email"
-                  type="email"
+                  type={mode === 'login' ? 'text' : 'email'}
                   value={form.email}
                   onChange={handleChange}
-                  placeholder="user@gmail.com"
+                  placeholder={mode === 'login' ? 'user@gmail.com hoặc thanhdanh' : 'user@gmail.com'}
+                  required
                 />
               </label>
+
+              {mode === 'register' && (
+                <>
+                  <label>
+                    {isEnglish ? 'Phone number' : 'Số điện thoại'}
+                    <input
+                      name="phone"
+                      type="tel"
+                      value={form.phone}
+                      onChange={handleChange}
+                      placeholder="0901234567"
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    {isEnglish ? 'Date of birth' : 'Ngày sinh'}
+                    <input
+                      name="dateOfBirth"
+                      type="date"
+                      value={form.dateOfBirth}
+                      onChange={handleChange}
+                      required
+                    />
+                  </label>
+
+                </>
+              )}
 
               <label>
                 {isEnglish ? 'Password' : 'Mật khẩu'}
@@ -297,6 +542,7 @@ function LandingPage({ onLoginSuccess, onVisitorDemo, initialAuthMode, language,
                   value={form.password}
                   onChange={handleChange}
                   placeholder="Nhập mật khẩu"
+                  required
                 />
               </label>
 
@@ -309,28 +555,44 @@ function LandingPage({ onLoginSuccess, onVisitorDemo, initialAuthMode, language,
                     value={form.confirmPassword}
                     onChange={handleChange}
                     placeholder={isEnglish ? 'Re-enter password' : 'Nhập lại mật khẩu'}
+                    required
                   />
                 </label>
               )}
 
-              {message && <p className="form-error">{message}</p>}
+              {message && <p className={messageType === 'success' ? 'form-success' : 'form-error'}>{message}</p>}
 
               <button type="submit">
                 {mode === 'login' ? (isEnglish ? 'Log in to the app' : 'Đăng nhập vào hệ thống') : (isEnglish ? 'Create account' : 'Đăng ký tài khoản')}
               </button>
             </form>
+            )}
 
-            <button
-              className="text-button"
-              onClick={() => {
-                setMode(mode === 'login' ? 'register' : 'login');
-                setMessage('');
-              }}
-            >
-              {mode === 'login'
-                ? (isEnglish ? 'No account? Sign up' : 'Chưa có tài khoản? Đăng ký')
-                : (isEnglish ? 'Already have an account? Log in' : 'Đã có tài khoản? Đăng nhập')}
-            </button>
+            {mode === 'login' && (
+              <button className="text-button forgot-link" type="button" onClick={openForgotPassword}>
+                Quên mật khẩu?
+              </button>
+            )}
+
+            {mode !== 'forgot' ? (
+              <button
+                className="text-button"
+                type="button"
+                onClick={() => {
+                  setMode(mode === 'login' ? 'register' : 'login');
+                  setMessage('');
+                  setMessageType('error');
+                }}
+              >
+                {mode === 'login'
+                  ? (isEnglish ? 'No account? Sign up' : 'Chưa có tài khoản? Đăng ký')
+                  : (isEnglish ? 'Already have an account? Log in' : 'Đã có tài khoản? Đăng nhập')}
+              </button>
+            ) : (
+              <button className="text-button" type="button" onClick={backToLogin}>
+                Quay lại đăng nhập
+              </button>
+            )}
           </section>
         </div>
       )}

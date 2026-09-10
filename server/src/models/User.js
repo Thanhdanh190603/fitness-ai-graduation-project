@@ -2,6 +2,13 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema(
   {
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true
+    },
     fullName: {
       type: String,
       required: true,
@@ -14,9 +21,47 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true
     },
+    phone: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    dateOfBirth: {
+      type: Date,
+      default: null
+    },
+    avatar: {
+      type: String,
+      default: ''
+    },
     password: {
       type: String,
       required: true
+    },
+    passwordResetCodeHash: {
+      type: String,
+      default: ''
+    },
+    passwordResetExpiresAt: {
+      type: Date,
+      default: null
+    },
+    passwordResetVerifiedAt: {
+      type: Date,
+      default: null
+    },
+    mustChangePassword: {
+      type: Boolean,
+      default: false
+    },
+    temporaryPasswordExpiresAt: {
+      type: Date,
+      default: null
+    },
+    passwordResetBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
     },
     role: {
       type: String,

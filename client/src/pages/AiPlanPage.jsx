@@ -1,43 +1,63 @@
 import { useEffect, useState } from 'react';
 import { goalWorkoutPlans } from '../data/workoutSchedule';
 
-function getBlockSettings(frequency) {
-  if (frequency <= 2) {
-    return {
-      label: 'Block 12-16 tuần',
-      maxWeeks: 16,
-      phases: [
-        { weeks: 'Tuần 1-4', startWeek: 1, endWeek: 4, name: 'Xây nền kỹ thuật', detail: 'Làm quen bài tập và giữ kỹ thuật chắc với tần suất thấp.' },
-        { weeks: 'Tuần 5-8', startWeek: 5, endWeek: 8, name: 'Tăng khối lượng', detail: 'Tăng dần số hiệp hoặc số lần khi cơ thể thích nghi.' },
-        { weeks: 'Tuần 9-12', startWeek: 9, endWeek: 12, name: 'Tăng cường độ', detail: 'Điều chỉnh mức tạ và thời gian nghỉ theo kết quả.' },
-        { weeks: 'Tuần 13-16', startWeek: 13, endWeek: 16, name: 'Đánh giá', detail: 'Kiểm tra tiến độ và chuẩn bị cho block tiếp theo.' }
-      ]
-    };
-  }
+const BASE_MIN_WEEKS = 8;
+const BASE_MAX_WEEKS = 12;
 
-  if (frequency === 3) {
-    return {
-      label: 'Block 10-14 tuần',
-      maxWeeks: 14,
-      phases: [
-        { weeks: 'Tuần 1-3', startWeek: 1, endWeek: 3, name: 'Xây nền kỹ thuật', detail: 'Làm quen bài tập và duy trì kỹ thuật ổn định.' },
-        { weeks: 'Tuần 4-6', startWeek: 4, endWeek: 6, name: 'Tăng khối lượng', detail: 'Tăng dần số hiệp hoặc số lần khi cơ thể thích nghi.' },
-        { weeks: 'Tuần 7-10', startWeek: 7, endWeek: 10, name: 'Tăng cường độ', detail: 'Điều chỉnh mức tạ và thời gian nghỉ theo kết quả.' },
-        { weeks: 'Tuần 11-14', startWeek: 11, endWeek: 14, name: 'Đánh giá', detail: 'Kiểm tra tiến độ và chuẩn bị cho block tiếp theo.' }
-      ]
-    };
-  }
-
+function createBlockPlan(frequency) {
   return {
-    label: 'Block 8-12 tuần',
-    maxWeeks: 12,
-    phases: [
-      { weeks: 'Tuần 1-3', startWeek: 1, endWeek: 3, name: 'Xây nền kỹ thuật', detail: 'Làm quen bài tập, giữ kỹ thuật chắc và mức gắng sức vừa phải.' },
-      { weeks: 'Tuần 4-6', startWeek: 4, endWeek: 6, name: 'Tăng khối lượng', detail: 'Tăng dần số hiệp hoặc số lần khi cơ thể hoàn thành tốt bài tập.' },
-      { weeks: 'Tuần 7-9', startWeek: 7, endWeek: 9, name: 'Tăng cường độ', detail: 'Điều chỉnh mức tạ và thời gian nghỉ theo kết quả từng buổi.' },
-      { weeks: 'Tuần 10-12', startWeek: 10, endWeek: 12, name: 'Deload & đánh giá', detail: 'Giảm tải hợp lý, xem lại form và lập hướng đi cho block tiếp theo.' }
-    ]
+    version: 2,
+    startingFrequency: frequency,
+    // Một Block giữ cùng khối lượng mục tiêu; tần suất chỉ làm thay đổi thời gian.
+    targetMinSessions: 5 * BASE_MIN_WEEKS,
+    targetMaxSessions: 5 * BASE_MAX_WEEKS,
+    completedSessions: 0
   };
+}
+
+function normalizeBlockPlan(savedPlan, frequency) {
+  if (!savedPlan) {
+    return createBlockPlan(frequency);
+  }
+
+  // Dữ liệu cũ từng lấy tổng buổi theo tần suất mới, khiến Block hiển thị sai.
+  if (
+    Number(savedPlan.version) !== 2 ||
+    (
+      Number(savedPlan.completedSessions) === 0 &&
+      Number(savedPlan.targetMaxSessions) < 40
+    )
+  ) {
+    return {
+      ...createBlockPlan(frequency),
+      completedSessions: Math.max(0, Number(savedPlan.completedSessions) || 0)
+    };
+  }
+
+  return savedPlan;
+}
+
+function getBlockPhases(maxWeeks) {
+  const phaseNames = [
+    ['Xây nền kỹ thuật', 'Làm quen bài tập và giữ kỹ thuật chắc.'],
+    ['Tăng khối lượng', 'Tăng dần số hiệp hoặc số lần khi cơ thể thích nghi.'],
+    ['Tăng cường độ', 'Điều chỉnh mức tạ và thời gian nghỉ theo tiến độ.'],
+    ['Deload & đánh giá', 'Giảm tải hợp lý và xem lại hướng đi tiếp theo.']
+  ];
+  const phaseLength = Math.max(1, Math.ceil(maxWeeks / phaseNames.length));
+
+  return phaseNames.map(([name, detail], index) => {
+    const startWeek = index * phaseLength + 1;
+    const endWeek = Math.min(maxWeeks, (index + 1) * phaseLength);
+
+    return {
+      weeks: `Tuần ${startWeek}-${endWeek}`,
+      startWeek,
+      endWeek,
+      name,
+      detail
+    };
+  });
 }
 
 function AiPlanPage({ user }) {
@@ -49,6 +69,7 @@ function AiPlanPage({ user }) {
   const [completedDays, setCompletedDays] = useState([]);
   const [frequency, setFrequency] = useState(defaultFrequency);
   const [duration, setDuration] = useState(defaultDuration);
+  const [blockPlan, setBlockPlan] = useState(null);
   const [showScheduleSettings, setShowScheduleSettings] = useState(false);
   const [weekReview, setWeekReview] = useState(null);
   const [reviewDecisions, setReviewDecisions] = useState({});
@@ -120,16 +141,27 @@ function AiPlanPage({ user }) {
     ],
     limitation: 'Hãy cập nhật lịch bận, cảm nhận và kết quả tập để AI điều chỉnh sát hơn.'
   };
-  const blockSettings = getBlockSettings(frequency);
-  const planPeriod = blockSettings.label;
-  const blockPhases = blockSettings.phases;
   const weekDays = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
   const scheduleWeekKey = currentWeek || 'current';
   const userStorageId = user.id || user._id || user.email;
   const scheduleStorageKey = `fitness-ai-busy-days-${userStorageId}-${planLabel}-${scheduleWeekKey}`;
   const completedStorageKey = `fitness-ai-completed-days-${userStorageId}-${planLabel}-${scheduleWeekKey}`;
-  const settingsStorageKey = `fitness-ai-settings-${userStorageId}-${planLabel}-${scheduleWeekKey}`;
+  const settingsStorageKey = `fitness-ai-settings-${userStorageId}-${planLabel}`;
+  const legacySettingsStorageKey = `fitness-ai-settings-${userStorageId}-${planLabel}-${scheduleWeekKey}`;
   const progressStorageKey = `fitness-ai-current-week-${userStorageId}`;
+  const blockStorageKey = `fitness-ai-block-progress-${userStorageId}`;
+
+  const activeBlockPlan = blockPlan || createBlockPlan(defaultFrequency);
+  const completedSessions = Number(activeBlockPlan.completedSessions) || 0;
+  const remainingMinSessions = Math.max(0, activeBlockPlan.targetMinSessions - completedSessions);
+  const remainingMaxSessions = Math.max(0, activeBlockPlan.targetMaxSessions - completedSessions);
+  const remainingMinWeeks = Math.ceil(remainingMinSessions / frequency);
+  const remainingMaxWeeks = Math.ceil(remainingMaxSessions / frequency);
+  const elapsedWeeks = Math.max(0, (currentWeek || 1) - 1);
+  const totalMinWeeks = Math.max(elapsedWeeks + remainingMinWeeks, elapsedWeeks + 1);
+  const totalMaxWeeks = Math.max(totalMinWeeks, elapsedWeeks + remainingMaxWeeks);
+  const planPeriod = `Block dự kiến ${totalMinWeeks}-${totalMaxWeeks} tuần`;
+  const blockPhases = getBlockPhases(totalMaxWeeks);
 
   const sessionsForFrequency = data.sessions.slice(0, frequency);
   const daysWithTraining = sessionsForFrequency.map((session) => session.day);
@@ -151,11 +183,13 @@ function AiPlanPage({ user }) {
       setBusyDays(savedBusyDays ? JSON.parse(savedBusyDays) : []);
       setCompletedDays(savedCompletedDays ? JSON.parse(savedCompletedDays) : []);
 
-      const savedSettings = localStorage.getItem(settingsStorageKey);
+      const savedSettings = localStorage.getItem(settingsStorageKey)
+        || localStorage.getItem(legacySettingsStorageKey);
       if (savedSettings) {
         const parsedSettings = JSON.parse(savedSettings);
         setFrequency(Number(parsedSettings.frequency) || defaultFrequency);
         setDuration(parsedSettings.duration || defaultDuration);
+        localStorage.setItem(settingsStorageKey, JSON.stringify(parsedSettings));
       } else {
         setFrequency(defaultFrequency);
         setDuration(defaultDuration);
@@ -170,9 +204,21 @@ function AiPlanPage({ user }) {
     scheduleStorageKey,
     completedStorageKey,
     settingsStorageKey,
+    legacySettingsStorageKey,
     defaultFrequency,
     defaultDuration
   ]);
+
+  useEffect(() => {
+    const savedBlockPlan = localStorage.getItem(blockStorageKey);
+
+    try {
+      const parsedBlockPlan = savedBlockPlan ? JSON.parse(savedBlockPlan) : null;
+      setBlockPlan(normalizeBlockPlan(parsedBlockPlan, defaultFrequency));
+    } catch (error) {
+      setBlockPlan(createBlockPlan(defaultFrequency));
+    }
+  }, [blockStorageKey, defaultFrequency]);
 
   function toggleBusyDay(day) {
     const nextBusyDays = busyDays.includes(day)
@@ -193,6 +239,7 @@ function AiPlanPage({ user }) {
   }
 
   function updateScheduleSetting(name, value) {
+    const nextValue = name === 'frequency' ? Number(value) : value;
     const nextSettings = {
       frequency,
       duration,
@@ -200,7 +247,7 @@ function AiPlanPage({ user }) {
     };
 
     if (name === 'frequency') {
-      setFrequency(Number(value));
+      setFrequency(nextValue);
     }
 
     if (name === 'duration') {
@@ -221,14 +268,21 @@ function AiPlanPage({ user }) {
       return;
     }
 
-    moveToNextWeek();
+    moveToNextWeek(completedDays.length);
   }
 
-  function moveToNextWeek() {
+  function moveToNextWeek(completedCount = completedDays.length) {
     setCompletedDays([]);
     localStorage.setItem(completedStorageKey, JSON.stringify([]));
 
-    if (currentWeek && currentWeek < blockSettings.maxWeeks) {
+    const nextBlockPlan = {
+      ...activeBlockPlan,
+      completedSessions: completedSessions + completedCount
+    };
+    setBlockPlan(nextBlockPlan);
+    localStorage.setItem(blockStorageKey, JSON.stringify(nextBlockPlan));
+
+    if (currentWeek) {
       const nextWeek = currentWeek + 1;
       localStorage.setItem(progressStorageKey, String(nextWeek));
       setCurrentWeek(nextWeek);
@@ -281,13 +335,13 @@ function AiPlanPage({ user }) {
       return;
     }
 
-    moveToNextWeek();
+    moveToNextWeek(nextCompletedDays.length);
   }
 
   useEffect(() => {
     const savedWeek = Number(localStorage.getItem(progressStorageKey)) || 1;
-    setCurrentWeek(Math.min(Math.max(savedWeek, 1), blockSettings.maxWeeks));
-  }, [progressStorageKey, blockSettings.maxWeeks]);
+    setCurrentWeek(Math.max(savedWeek, 1));
+  }, [progressStorageKey]);
 
   function getPhaseStatus(phase) {
     if (!currentWeek || currentWeek < phase.startWeek) {
@@ -356,6 +410,12 @@ function AiPlanPage({ user }) {
           <strong>Lịch tập Member</strong>
           <span>
             Tùy chỉnh lịch tuần, theo dõi tiến độ và điều chỉnh theo phản hồi.
+          </span>
+          <span className="plan-progress-text">
+            Đã hoàn thành {completedSessions} buổi · Còn khoảng {remainingMinSessions}-{remainingMaxSessions} buổi theo mục tiêu Block.
+          </span>
+          <span className="plan-progress-text">
+            Với tần suất hiện tại, thời gian còn lại khoảng {remainingMinWeeks}-{remainingMaxWeeks} tuần.
           </span>
         </div>
       </section>
@@ -495,7 +555,7 @@ function AiPlanPage({ user }) {
             <div>
               <h3>Tiến trình trong {planPeriod.toLowerCase()}</h3>
               <p>Mỗi tuần có {frequency} buổi theo lịch bên trên, còn nội dung và mức độ sẽ tăng theo từng giai đoạn.</p>
-              {currentWeek && <p className="current-week-text">Bạn đang tập: Tuần {currentWeek} / {blockSettings.maxWeeks}</p>}
+              {currentWeek && <p className="current-week-text">Bạn đang tập: Tuần {currentWeek} / khoảng {totalMaxWeeks}</p>}
             </div>
           </div>
 

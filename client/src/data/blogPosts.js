@@ -118,6 +118,90 @@ const blogPosts = [
     image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=900&q=85',
     content: 'Thay vì đợi đến lúc khát mới uống, hãy chia lượng nước thành nhiều lần trong ngày. Ngày tập dài hoặc đổ nhiều mồ hôi có thể cần nhiều nước hơn ngày nghỉ.'
     ,categoryEn: 'Habits', titleEn: 'How should you drink water on training days?', excerptEn: 'A steady hydration habit can help your energy and training performance.', contentEn: 'Instead of waiting until you are thirsty, spread water across the day. Longer sessions or heavy sweating may require more than a rest day.'
+  },
+  {
+    category: 'Kỹ thuật',
+    title: 'Hít đất cho người mới: 3 cách giảm độ khó',
+    excerpt: 'Bắt đầu đúng mức giúp bạn giữ form tốt và tiến bộ mà không bị quá tải vai, cổ tay.',
+    readTime: '5 phút đọc',
+    image: 'https://images.unsplash.com/photo-1598971639058-999f6c8f7f22?auto=format&fit=crop&w=900&q=85',
+    content: 'Nếu hít đất cơ bản còn khó, hãy tập với tường, mặt bàn chắc chắn hoặc chống gối. Giữ thân người thành một đường thẳng, siết nhẹ bụng và hạ người có kiểm soát. Khi hoàn thành được 3 hiệp ổn định, bạn mới chuyển sang phiên bản khó hơn.',
+    categoryEn: 'Technique',
+    titleEn: 'Three push-up regressions for beginners',
+    excerptEn: 'The right starting level helps you keep good form without overloading your shoulders or wrists.',
+    contentEn: 'If a full push-up is too difficult, use a wall, a sturdy table or a knee variation. Keep your body in one line, brace your core and lower with control. Progress only after you can complete three steady sets.'
+  },
+  {
+    category: 'Lịch tập',
+    title: 'Cách chia buổi tập khi bạn chỉ có 2 ngày mỗi tuần',
+    excerpt: 'Lịch 2 buổi vẫn có hiệu quả nếu mỗi buổi tập đủ nhóm cơ chính và có mục tiêu rõ ràng.',
+    readTime: '5 phút đọc',
+    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=900&q=85',
+    content: 'Bạn có thể dùng hai buổi toàn thân, mỗi buổi gồm một bài chân, một bài đẩy, một bài kéo và một bài core. Giữ ít nhất một ngày nghỉ giữa hai buổi, sau đó tăng dần số lần hoặc mức tạ khi kỹ thuật đã ổn định.',
+    categoryEn: 'Training plan',
+    titleEn: 'How to train when you only have two days a week',
+    excerptEn: 'Two sessions can still work when both sessions cover the major muscle groups with a clear goal.',
+    contentEn: 'Use two full-body sessions with one leg, push, pull and core movement in each workout. Keep at least one rest day between sessions, then gradually add repetitions or load when technique is stable.'
+  },
+  {
+    category: 'Dinh dưỡng',
+    title: 'Tăng cơ có cần ăn thật nhiều không?',
+    excerpt: 'Tăng nhẹ năng lượng và đủ đạm thường dễ duy trì hơn việc ăn quá mức trong thời gian ngắn.',
+    readTime: '4 phút đọc',
+    image: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=85',
+    content: 'Tăng cơ không đồng nghĩa với ăn không kiểm soát. Hãy ưu tiên đủ đạm, thêm một phần tinh bột hoặc chất béo tốt và theo dõi cân nặng theo tuần. Nếu cân tăng quá nhanh, hãy giảm phần ăn xuống một chút thay vì bỏ bữa.',
+    categoryEn: 'Nutrition',
+    titleEn: 'Do you need to eat a lot to build muscle?',
+    excerptEn: 'A small energy increase and enough protein is usually easier to sustain than overeating for a short period.',
+    contentEn: 'Muscle gain does not require uncontrolled eating. Prioritize enough protein, add a serving of carbohydrates or healthy fats and track weekly weight trends. If weight rises too quickly, reduce portions slightly instead of skipping meals.'
+  },
+  {
+    category: 'Dinh dưỡng',
+    title: 'Một đĩa ăn cân bằng cho người tập gồm gì?',
+    excerpt: 'Công thức đơn giản để bạn tự chọn món Việt mà vẫn đủ đạm, rau và năng lượng.',
+    readTime: '4 phút đọc',
+    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=85',
+    content: 'Một bữa ăn có thể bắt đầu bằng một phần rau, một nguồn đạm như trứng, cá, thịt nạc hoặc đậu phụ, cùng phần tinh bột phù hợp với mục tiêu. Thêm nước lọc và điều chỉnh lượng dầu, sốt nếu bạn đang kiểm soát năng lượng.',
+    categoryEn: 'Nutrition',
+    titleEn: 'What makes a balanced plate for active people?',
+    excerptEn: 'A simple formula helps you choose Vietnamese meals with enough protein, vegetables and energy.',
+    contentEn: 'Start with vegetables, add protein such as eggs, fish, lean meat or tofu, then choose a carbohydrate portion that matches your goal. Use water and adjust oils or sauces when you are tracking energy.'
+  },
+  {
+    category: 'Phục hồi',
+    title: 'Đau mỏi sau tập: khi nào nên nghỉ?',
+    excerpt: 'Phân biệt cảm giác mỏi cơ bình thường với dấu hiệu cần giảm tải và hỏi chuyên gia.',
+    readTime: '5 phút đọc',
+    image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=85',
+    content: 'Mỏi cơ nhẹ sau buổi tập thường giảm dần trong vài ngày. Nếu đau sắc, sưng, tê, mất sức hoặc đau tăng khi vận động, hãy dừng bài tập gây đau và tìm tư vấn y tế. Ngày phục hồi vẫn có thể đi bộ nhẹ hoặc giãn cơ không đau.',
+    categoryEn: 'Recovery',
+    titleEn: 'When should you rest after training soreness?',
+    excerptEn: 'Learn the difference between normal muscle soreness and signs that call for reduced load or professional advice.',
+    contentEn: 'Mild soreness often improves over a few days. Stop the painful movement and seek medical advice if pain is sharp, swollen, numb, weak or worsening with movement. A recovery day can still include pain-free walking or mobility.'
+  },
+  {
+    category: 'Thói quen',
+    title: '5 phút khởi động trước khi tập có tác dụng gì?',
+    excerpt: 'Khởi động ngắn giúp cơ thể vào nhịp và chuẩn bị cho biên độ vận động của buổi tập.',
+    readTime: '3 phút đọc',
+    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=85',
+    content: 'Hãy bắt đầu bằng đi bộ hoặc vận động nhẹ, sau đó làm vài động tác xoay khớp và một hiệp thử với mức nhẹ. Khởi động không cần làm bạn mệt; mục tiêu là làm nóng cơ thể và kiểm tra cảm giác ở các khớp.',
+    categoryEn: 'Habits',
+    titleEn: 'What can a five-minute warm-up do?',
+    excerptEn: 'A short warm-up helps your body get ready for the range of motion in the session.',
+    contentEn: 'Begin with light walking or movement, add a few joint motions and do a practice set with low effort. A warm-up should not exhaust you; it should raise temperature and help you check how your joints feel.'
+  },
+  {
+    category: 'Thể trạng',
+    title: 'Vì sao nên theo dõi số đo thay vì chỉ nhìn cân nặng?',
+    excerpt: 'Cân nặng có thể thay đổi do nước, thức ăn và thời điểm đo; số đo giúp nhìn tiến độ rõ hơn.',
+    readTime: '4 phút đọc',
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=900&q=85',
+    content: 'Hãy đo trong điều kiện tương tự mỗi tuần, ghi lại vòng eo, ảnh thể trạng và mức tạ hoặc số lần lặp. Khi các chỉ số được xem cùng nhau, bạn sẽ đánh giá tiến bộ công bằng hơn thay vì kết luận từ một lần cân.',
+    categoryEn: 'Body composition',
+    titleEn: 'Why track measurements instead of weight alone?',
+    excerptEn: 'Weight changes with water, food and timing, while measurements can show progress more clearly.',
+    contentEn: 'Measure under similar conditions each week and record waist size, progress photos and strength. Looking at several signals together gives you a fairer view than reacting to one weigh-in.'
   }
 ];
 

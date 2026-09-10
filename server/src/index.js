@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes.js';
 import exerciseRoutes from './routes/exerciseRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import blogRoutes from './routes/blogRoutes.js';
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/blog', blogRoutes);
 
 app.get('/', (req, res) => {
   res.json({

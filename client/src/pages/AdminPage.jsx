@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import api from '../api';
-import blogPosts from '../data/blogPosts';
 
 const emptyExercise = {
   name: '',
@@ -36,12 +35,18 @@ function AdminPage({ user, onLogout }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(true);
-  const [newUserIds, setNewUserIds] = useState([]);
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [blogLoading, setBlogLoading] = useState(true);
   const [error, setError] = useState('');
   const [form, setForm] = useState(emptyExercise);
   const [editingId, setEditingId] = useState('');
   const [formLoading, setFormLoading] = useState(false);
   const [formMessage, setFormMessage] = useState('');
+  const [selectedBlog, setSelectedBlog] = useState(null);
+  const [resetMember, setResetMember] = useState(null);
+  const [temporaryPassword, setTemporaryPassword] = useState('');
+  const [resetLoadingId, setResetLoadingId] = useState('');
+  const [deleteLoadingId, setDeleteLoadingId] = useState('');
 
   async function loadExercises() {
     setLoading(true);
@@ -62,24 +67,7 @@ function AdminPage({ user, onLogout }) {
 
     try {
       const response = await api.get('/users');
-      const nextUsers = response.data;
-      const storageKey = 'fitness-ai-admin-last-user-view';
-      const lastViewedAt = Number(window.localStorage.getItem(storageKey));
-      const newestUserTime = nextUsers.reduce((latest, item) => {
-        const createdTime = new Date(item.createdAt || 0).getTime();
-        return Math.max(latest, createdTime);
-      }, 0);
-
-      if (lastViewedAt) {
-        setNewUserIds(nextUsers
-          .filter((item) => new Date(item.createdAt || 0).getTime() > lastViewedAt)
-          .map((item) => item._id));
-      } else {
-        setNewUserIds([]);
-      }
-
-      window.localStorage.setItem(storageKey, String(Math.max(Date.now(), newestUserTime)));
-      setUsers(nextUsers);
+      setUsers(response.data);
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể tải danh sách người dùng');
     } finally {
@@ -87,10 +75,29 @@ function AdminPage({ user, onLogout }) {
     }
   }
 
+  async function loadBlogPosts() {
+    setBlogLoading(true);
+
+    try {
+      const response = await api.get('/blog/admin');
+      setBlogPosts(response.data);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Không thể tải danh sách bài viết');
+    } finally {
+      setBlogLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadExercises();
     loadUsers();
+    loadBlogPosts();
   }, []);
+
+  const newUsers = users.filter((item) => {
+    const createdTime = new Date(item.createdAt || 0).getTime();
+    return createdTime > Date.now() - 24 * 60 * 60 * 1000;
+  });
 
   function updateForm(event) {
     const { name, value, type, checked } = event.target;
@@ -172,6 +179,53 @@ function AdminPage({ user, onLogout }) {
     }
   }
 
+  async function reviewBlogPost(post, status) {
+    try {
+      const response = await api.patch(`/blog/${post._id}/review`, { status });
+      setBlogPosts((currentPosts) => currentPosts.map((item) => item._id === post._id ? response.data.post : item));
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Không thể cập nhật bài viết.');
+    }
+  }
+
+  async function resetMemberPassword(member) {
+    if (!window.confirm(`Cấp lại mật khẩu tạm thời cho ${member.fullName}?`)) {
+      return;
+    }
+
+    setResetLoadingId(member._id);
+
+    try {
+      const response = await api.post(`/users/${member._id}/reset-password`);
+      setResetMember(member);
+      setTemporaryPassword(response.data.temporaryPassword);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Không thể cấp lại mật khẩu.');
+    } finally {
+      setResetLoadingId('');
+    }
+  }
+
+  async function deleteUser(member) {
+    if (!window.confirm(`Bạn có chắc muốn xóa tài khoản ${member.fullName}? Dữ liệu tài khoản sẽ bị xóa vĩnh viễn.`)) {
+      return;
+    }
+
+    setDeleteLoadingId(member._id);
+
+    try {
+      await api.delete(`/users/${member._id}`);
+      setUsers((currentUsers) => currentUsers.filter((item) => item._id !== member._id));
+      if (resetMember?._id === member._id) {
+        setResetMember(null);
+      }
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Không thể xóa tài khoản.');
+    } finally {
+      setDeleteLoadingId('');
+    }
+  }
+
   return (
     <div className="admin-page">
       <aside className="admin-sidebar">
@@ -213,8 +267,8 @@ function AdminPage({ user, onLogout }) {
           </article>
           <article className="admin-stat-card admin-stat-gold">
             <span>Bài viết Blog</span>
-            <strong>{blogPosts.length}</strong>
-            <small>Bài viết và cập nhật kiến thức</small>
+            <strong>{blogLoading ? '...' : blogPosts.length}</strong>
+            <small>{blogPosts.filter((post) => post.status === 'pending').length} bài chờ duyệt</small>
           </article>
           <article className="admin-stat-card admin-stat-blue">
             <span>Người dùng</span>
@@ -291,12 +345,44 @@ function AdminPage({ user, onLogout }) {
           )}
         </section>
 
+        <section className="admin-panel admin-blog-panel" id="noi-dung">
+          <div className="admin-panel-heading">
+            <div>
+              <p className="eyebrow">NỘI DUNG CỘNG ĐỒNG</p>
+              <h2>Duyệt bài viết Blog</h2>
+            </div>
+            <button className="admin-refresh-button" type="button" onClick={loadBlogPosts} disabled={blogLoading}>
+              {blogLoading ? 'Đang tải...' : 'Tải lại danh sách'}
+            </button>
+          </div>
+          {blogLoading ? (
+            <div className="admin-empty-state">Đang tải bài viết...</div>
+          ) : blogPosts.length === 0 ? (
+            <div className="admin-empty-state">Chưa có bài viết cộng đồng nào.</div>
+          ) : (
+            <div className="admin-blog-list">
+              {blogPosts.map((post) => (
+                <article className="admin-blog-row" key={post._id}>
+                  <div>
+                    <span className={`blog-status blog-status-${post.status}`}>
+                      {post.status === 'approved' ? 'Đã duyệt' : post.status === 'rejected' ? 'Đã từ chối' : 'Chờ duyệt'}
+                    </span>
+                    <h3>{post.title}</h3>
+                    <p>{post.excerpt}</p>
+                    <small>Đăng bởi {post.author?.fullName || 'Thành viên'} · {post.publishedDate}</small>
+                  </div>
+                  <div className="admin-blog-actions">
+                    <button type="button" onClick={() => setSelectedBlog(post)}>Xem nội dung</button>
+                    {post.status !== 'approved' && <button type="button" onClick={() => reviewBlogPost(post, 'approved')}>Duyệt</button>}
+                    {post.status !== 'rejected' && <button type="button" className="admin-delete-button" onClick={() => reviewBlogPost(post, 'rejected')}>Từ chối</button>}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
         <section className="admin-coming-grid">
-          <article className="admin-coming-card" id="noi-dung">
-            <span className="admin-card-index">02</span>
-            <h2>Quản lý Blog</h2>
-            <p>Danh sách bài viết hiện lấy từ nguồn đã kiểm duyệt. Bước tiếp theo sẽ thêm form để Admin đăng và cập nhật bài.</p>
-          </article>
           <article className="admin-coming-card admin-users-card" id="nguoi-dung">
             <div className="admin-panel-heading">
               <div>
@@ -309,8 +395,7 @@ function AdminPage({ user, onLogout }) {
             </div>
             <div className="admin-user-summary">
               <span>Member: <strong>{users.filter((item) => item.role !== 'admin' && item.membershipStatus === 'active').length}</strong></span>
-              <span>Visitor: <strong>{users.filter((item) => item.role !== 'admin' && item.membershipStatus !== 'active').length}</strong></span>
-              <span className="admin-new-user-count">Mới đăng ký: <strong>{newUserIds.length}</strong></span>
+              <span className="admin-new-user-count">Mới đăng ký: <strong>{newUsers.length}</strong></span>
             </div>
             {usersLoading ? (
               <p className="admin-users-empty">Đang tải danh sách tài khoản...</p>
@@ -331,9 +416,29 @@ function AdminPage({ user, onLogout }) {
                       </div>
                       <div className="admin-user-meta">
                         <b className={`admin-user-badge admin-user-${accountType.toLowerCase()}`}>{accountType}</b>
-                        {newUserIds.includes(item._id) && <b className="admin-new-user-badge">Mới đăng ký</b>}
+                        {newUsers.some((newUser) => newUser._id === item._id) && <b className="admin-new-user-badge">Mới đăng ký</b>}
                         <small>{item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : 'Chưa rõ ngày đăng ký'}</small>
                       </div>
+                      {accountType === 'Member' && (
+                        <button
+                          className="admin-reset-password-button"
+                          type="button"
+                          onClick={() => resetMemberPassword(item)}
+                          disabled={resetLoadingId === item._id}
+                        >
+                          {resetLoadingId === item._id ? 'Đang tạo...' : 'Cấp lại mật khẩu'}
+                        </button>
+                      )}
+                      {accountType !== 'Admin' && (
+                        <button
+                          className="admin-delete-user-button"
+                          type="button"
+                          onClick={() => deleteUser(item)}
+                          disabled={deleteLoadingId === item._id}
+                        >
+                          {deleteLoadingId === item._id ? 'Đang xóa...' : 'Xóa tài khoản'}
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -342,6 +447,45 @@ function AdminPage({ user, onLogout }) {
           </article>
         </section>
       </main>
+
+      {selectedBlog && (
+        <div className="auth-modal blog-modal" role="dialog" aria-modal="true" aria-labelledby="admin-blog-title">
+          <article className="blog-detail-card">
+            <button className="auth-close-button" type="button" onClick={() => setSelectedBlog(null)} aria-label="Đóng">×</button>
+            <span>{selectedBlog.category}</span>
+            <h2 id="admin-blog-title">{selectedBlog.title}</h2>
+            <small>Đăng bởi {selectedBlog.author?.fullName || 'Thành viên'} · {selectedBlog.publishedDate}</small>
+            <p>{selectedBlog.content}</p>
+            <button type="button" onClick={() => setSelectedBlog(null)}>Đóng</button>
+          </article>
+        </div>
+      )}
+
+      {resetMember && (
+        <div className="auth-modal" role="dialog" aria-modal="true" aria-labelledby="reset-member-title">
+          <article className="admin-reset-password-card">
+            <button
+              className="auth-close-button"
+              type="button"
+              onClick={() => setResetMember(null)}
+              aria-label="Đóng"
+            >
+              ×
+            </button>
+            <p className="eyebrow">HỖ TRỢ MEMBER</p>
+            <h2 id="reset-member-title">Mật khẩu tạm thời đã được tạo</h2>
+            <p>
+              Gửi mật khẩu này cho <strong>{resetMember.fullName}</strong>. Member sẽ phải đổi sang mật khẩu riêng ngay sau khi đăng nhập.
+            </p>
+            <div className="temporary-password-box">
+              <span>Mật khẩu tạm thời</span>
+              <strong>{temporaryPassword}</strong>
+            </div>
+            <p className="admin-reset-note">Mật khẩu chỉ hiển thị lần này và có hiệu lực trong 24 giờ.</p>
+            <button type="button" onClick={() => setResetMember(null)}>Đã ghi lại</button>
+          </article>
+        </div>
+      )}
     </div>
   );
 }

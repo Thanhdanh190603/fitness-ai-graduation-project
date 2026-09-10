@@ -43,6 +43,115 @@ function getBmiStatus(bmi, age) {
   return 'Béo phì';
 }
 
+function getBodyTypeGroup(bodyType) {
+  const normalized = String(bodyType || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  if (normalized.includes('skinny fat')) {
+    return 'skinny-fat';
+  }
+
+  if (
+    normalized.includes('thua can') ||
+    normalized.includes('tich mo') ||
+    normalized.includes('beo phi')
+  ) {
+    return 'high-fat';
+  }
+
+  if (normalized.includes('gay') || normalized.includes('thin')) {
+    return 'thin';
+  }
+
+  if (normalized.includes('can doi') || normalized.includes('balanced')) {
+    return 'balanced';
+  }
+
+  if (normalized.includes('tang co') || normalized.includes('muscular')) {
+    return 'muscular';
+  }
+
+  return 'unknown';
+}
+
+function validateImageBmiConsistency(imageAnalysis, bmi, bmiStatus, age) {
+  if (Number(age) < 20 || !imageAnalysis || !Number.isFinite(Number(bmi))) {
+    return null;
+  }
+
+  const aiConsistency = String(imageAnalysis.dataConsistency || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  if (
+    aiConsistency.includes('khong phu hop') ||
+    aiConsistency.includes('khong hop ly') ||
+    aiConsistency.includes('mismatch')
+  ) {
+    return {
+      code: 'PROFILE_DATA_MISMATCH',
+      message: `Thông tin chưa phù hợp: AI nhận thấy ảnh và số liệu chiều cao, cân nặng chưa thống nhất. ${imageAnalysis.dataConsistencyReason || ''} Vui lòng kiểm tra lại chiều cao, cân nặng và ảnh thể trạng rồi nhập lại.`.trim()
+    };
+  }
+
+  if (aiConsistency.includes('kho xac dinh') || aiConsistency.includes('uncertain')) {
+    return {
+      code: 'PROFILE_DATA_MISMATCH',
+      message: 'Ảnh thể trạng chưa đủ rõ để đối chiếu với chiều cao và cân nặng. Vui lòng nhập lại số liệu và gửi ảnh toàn thân rõ hơn.'
+    };
+  }
+
+  const group = getBodyTypeGroup(imageAnalysis.bodyType);
+  const bmiValue = Number(bmi);
+  let visualDescription = '';
+
+  if (group === 'high-fat' && bmiValue < 18.5) {
+    visualDescription = 'ảnh có dấu hiệu tích mỡ cao';
+  } else if (group === 'thin' && bmiValue >= 25) {
+    visualDescription = 'ảnh có dáng người rất gầy';
+  } else if (group === 'balanced' && (bmiValue < 16 || bmiValue >= 30)) {
+    visualDescription = 'ảnh có dáng người cân đối';
+  } else if (group === 'muscular' && bmiValue < 16) {
+    visualDescription = 'ảnh có dấu hiệu cơ bắp rõ';
+  } else {
+    return null;
+  }
+
+  return {
+    code: 'PROFILE_DATA_MISMATCH',
+    message: `Thông tin chưa phù hợp: ${visualDescription}, nhưng BMI từ chiều cao và cân nặng là ${bmi} (${bmiStatus}). Vui lòng kiểm tra lại chiều cao, cân nặng và ảnh thể trạng rồi nhập lại.`
+  };
+}
+
+function getCombinedAssessmentStatus(imageAnalysis, bmiStatus, bmi, age) {
+  if (Number(age) < 20) {
+    return 'BMI tham khảo theo độ tuổi';
+  }
+
+  const group = getBodyTypeGroup(imageAnalysis?.bodyType);
+
+  if (group === 'skinny-fat') {
+    return Number(bmi) < 18.5 ? 'Skinny fat, BMI thấp' : 'Skinny fat theo ảnh';
+  }
+
+  if (group === 'high-fat' && Number(bmi) >= 25) {
+    return 'Tích mỡ cao theo ảnh và BMI';
+  }
+
+  if (group === 'thin' && Number(bmi) < 18.5) {
+    return 'Gầy theo ảnh và BMI';
+  }
+
+  if (group === 'balanced' && Number(bmi) >= 18.5 && Number(bmi) < 25) {
+    return 'Cân đối theo ảnh và BMI';
+  }
+
+  return bmiStatus;
+}
+
 function createFreeAdvice(user, bmi, bmiStatus, validImageCount) {
   const advice = [];
   const age = Number(user.age);
@@ -100,8 +209,13 @@ function createDemoImageAnalysis(user, bmi, bmiStatus, validImageCount, invalidI
   }
 
   if (age < 20) {
-    bodyType = 'Đang phát triển';
-    bodyTypeReason = 'Người dưới 20 tuổi không nên kết luận tạng người như người trưởng thành.';
+    if (validImageCount > 0) {
+      bodyType = 'Chưa thể xác định từ ảnh';
+      bodyTypeReason = 'Ảnh đã được lưu nhưng AI phân tích ảnh chưa khả dụng, nên hệ thống không tự đoán tạng người từ ảnh.';
+    } else {
+      bodyType = 'Đang phát triển';
+      bodyTypeReason = 'Người dưới 20 tuổi không nên kết luận tạng người như người trưởng thành.';
+    }
     confidence = 'trung bình';
     focus.push('Xây nền thể lực an toàn');
     focus.push('Giữ kỹ thuật đúng');
@@ -110,8 +224,13 @@ function createDemoImageAnalysis(user, bmi, bmiStatus, validImageCount, invalidI
     direction.push('Kết hợp giãn cơ và hoạt động thể thao vui để duy trì thói quen.');
     direction.push('Không tập tạ nặng, không ép cân và không theo lịch cường độ cao.');
   } else if (bmiStatus === 'Thiếu cân') {
-    bodyType = 'Gầy';
-    bodyTypeReason = 'BMI đang thấp, cần ưu tiên tăng cân và xây cơ nền tảng.';
+    if (validImageCount > 0) {
+      bodyType = 'Chưa thể xác định từ ảnh';
+      bodyTypeReason = 'AI chưa đọc được ảnh nên chưa thể kết luận tạng người.';
+    } else {
+      bodyType = 'Gầy';
+      bodyTypeReason = 'BMI đang thấp, cần ưu tiên tăng cân và xây cơ nền tảng.';
+    }
     confidence = validImageCount > 0 ? 'trung bình' : 'thấp';
     focus.push('Tăng cơ nền tảng');
     focus.push('Ăn đủ năng lượng');
@@ -120,8 +239,10 @@ function createDemoImageAnalysis(user, bmi, bmiStatus, validImageCount, invalidI
     direction.push('Tăng dần số hiệp khi form đã ổn định.');
     direction.push('Theo dõi cân nặng và sức mạnh mỗi tuần.');
   } else if (bmiStatus === 'Bình thường') {
-    bodyType = validImageCount > 0 ? 'Cần AI ảnh để xác định rõ' : 'Bình thường theo BMI';
-    bodyTypeReason = 'BMI ở vùng bình thường; cần ảnh thật hoặc tự đánh giá thêm để phân biệt cân đối hay skinny fat.';
+    bodyType = validImageCount > 0 ? 'Chưa thể xác định từ ảnh' : 'Bình thường theo BMI';
+    bodyTypeReason = validImageCount > 0
+      ? 'AI chưa đọc được ảnh nên chưa thể kết luận tạng người.'
+      : 'BMI ở vùng bình thường; cần ảnh thật hoặc AI ảnh để phân biệt cân đối hay skinny fat.';
     confidence = 'thấp';
     focus.push(user.goal || 'Cải thiện thể lực');
     focus.push('Tăng chất lượng vận động');
@@ -130,8 +251,13 @@ function createDemoImageAnalysis(user, bmi, bmiStatus, validImageCount, invalidI
     direction.push('Kết hợp sức mạnh, core và giãn cơ.');
     direction.push('Tăng độ khó theo từng tuần thay vì thay đổi quá nhanh.');
   } else {
-    bodyType = 'Tích mỡ cao';
-    bodyTypeReason = 'BMI đang cao hơn vùng khuyến nghị, nên ưu tiên giảm mỡ bền vững.';
+    if (validImageCount > 0) {
+      bodyType = 'Chưa thể xác định từ ảnh';
+      bodyTypeReason = 'AI chưa đọc được ảnh nên chưa thể kết luận tạng người.';
+    } else {
+      bodyType = 'Tích mỡ cao';
+      bodyTypeReason = 'BMI đang cao hơn vùng khuyến nghị, nên ưu tiên giảm mỡ bền vững.';
+    }
     confidence = validImageCount > 0 ? 'trung bình' : 'thấp';
     focus.push('Giảm mỡ bền vững');
     focus.push('Tăng vận động toàn thân');
@@ -256,8 +382,9 @@ async function createRealAiAnalysis(user, bmi, bmiStatus, isUnder20) {
 
   const prompt = `
 Bạn là AI fitness coach trong website đồ án.
-Hãy phân tích ảnh thể trạng ở mức tham khảo, không chẩn đoán bệnh, không ước lượng phần trăm mỡ, không kết luận BMI từ ảnh.
-Bạn phải phân loại tạng người theo ảnh và số liệu. Các nhãn hợp lệ:
+Hãy phân tích từng ảnh thể trạng ở mức tham khảo, không chẩn đoán bệnh, không ước lượng phần trăm mỡ, không tự kết luận BMI từ ảnh.
+Bạn phải phân loại tạng người theo ảnh, sau đó đối chiếu với chiều cao, cân nặng và BMI đã tính. Quy tắc này áp dụng cho mọi tạng người, không chỉ skinny fat.
+Các nhãn hợp lệ:
 - "gầy"
 - "skinny fat"
 - "cân đối"
@@ -271,6 +398,11 @@ Nếu thấy dấu hiệu này, hãy ghi bodyType là "skinny fat". Không dùng
 Khi phân loại tạng người, hãy ưu tiên quan sát từ ảnh hơn BMI. BMI thấp hoặc bình thường không được tự động kết luận là "gầy" nếu ảnh cho thấy cơ tổng thể mỏng nhưng vùng bụng/eo vẫn nhô hoặc tích mỡ mềm.
 Chỉ ghi "gầy" khi cơ thể mỏng đều, bụng/eo phẳng rõ và không có dấu hiệu bụng dưới hoặc eo nhô so với thân trên.
 Nếu phân vân giữa "gầy" và "skinny fat", hãy chọn "skinny fat" khi mục tiêu tập luyện nên là tăng cơ đồng thời kiểm soát mỡ vùng bụng.
+Sau khi phân loại, hãy kiểm tra tính hợp lý của ảnh với số liệu:
+- "phù hợp": hình ảnh và BMI có thể cùng mô tả một người.
+- "không phù hợp": có mâu thuẫn rõ ràng, ví dụ ảnh cho thấy tích mỡ rất cao nhưng BMI lại cực thấp, hoặc ảnh cho thấy cơ thể rất gầy nhưng BMI lại ở mức thừa cân/béo phì.
+- "khó xác định": ảnh không đủ sáng, bị che, sai người, không thấy toàn thân hoặc chỉ có một góc không đủ để đối chiếu.
+Nếu là "không phù hợp", không đưa ra hướng tập dựa trên kết quả đó và yêu cầu người dùng kiểm tra, nhập lại dữ liệu.
 
 Thông tin user:
 - Tuổi: ${user.age}
@@ -287,6 +419,8 @@ Yêu cầu trả về JSON thuần, không markdown:
 {
   "bodyType": "một trong các nhãn hợp lệ ở trên",
   "bodyTypeReason": "giải thích ngắn vì sao chọn tạng người đó",
+  "dataConsistency": "phù hợp | không phù hợp | khó xác định",
+  "dataConsistencyReason": "giải thích ngắn việc ảnh có khớp với chiều cao, cân nặng và BMI hay không",
   "confidence": "thấp | trung bình | cao",
   "visualSummary": "nhận xét tổng quan từ ảnh, nói chắc nhưng không quá đà",
   "postureNotes": ["nhận xét 1", "nhận xét 2"],
@@ -333,6 +467,7 @@ async function freeAnalysis(req, res) {
     const isUnder20 = Number(user.age) < 20;
     let imageAnalysis = null;
     let aiMode = 'demo';
+    let imageAiFailed = false;
 
     try {
       imageAnalysis = await createRealAiAnalysis(user, bmi, bmiStatus, isUnder20);
@@ -341,7 +476,20 @@ async function freeAnalysis(req, res) {
         aiMode = 'real-image-ai';
       }
     } catch (error) {
-      aiMode = 'demo-fallback';
+      imageAiFailed = true;
+      aiMode = 'image-ai-error';
+      console.error('Image AI analysis failed:', error.message);
+    }
+
+    const realImageAiEnabled = process.env.USE_REAL_AI === 'true'
+      && process.env.AI_PROVIDER === 'gemini'
+      && Boolean(process.env.GEMINI_API_KEY);
+
+    if (realImageAiEnabled && userImages.length > 0 && (imageAiFailed || !imageAnalysis)) {
+      return res.status(503).json({
+        code: 'IMAGE_ANALYSIS_UNAVAILABLE',
+        message: 'AI chưa đọc được ảnh thể trạng. Vui lòng kiểm tra lại ảnh toàn thân, chiều cao, cân nặng và thử lại.'
+      });
     }
 
     if (!imageAnalysis) {
@@ -354,6 +502,26 @@ async function freeAnalysis(req, res) {
       );
     }
 
+    const consistencyError = aiMode === 'real-image-ai'
+      ? validateImageBmiConsistency(imageAnalysis, bmi, bmiStatus, user.age)
+      : null;
+
+    if (consistencyError) {
+      return res.status(422).json({
+        ...consistencyError,
+        bmi,
+        bmiStatus,
+        imageBodyType: imageAnalysis.bodyType
+      });
+    }
+
+    const assessmentStatus = getCombinedAssessmentStatus(
+      imageAnalysis,
+      bmiStatus,
+      bmi,
+      user.age
+    );
+
     res.json({
       type: 'free',
       title: 'Phân tích AI miễn phí',
@@ -365,6 +533,7 @@ async function freeAnalysis(req, res) {
       totalImageCount: imageStats.total,
       invalidImageCount: imageStats.invalid,
       imageAnalysis,
+      assessmentStatus,
       goal: user.goal,
       summary: isUnder20
         ? 'Đây là phân tích tham khảo cho người dưới 20 tuổi. BMI ở độ tuổi này cần được xem theo tuổi và giới tính, không kết luận như người trưởng thành.'

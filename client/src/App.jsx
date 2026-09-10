@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from './api';
 import BlogPage from './pages/BlogPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 import AdminPage from './pages/AdminPage';
 import DashboardPage from './pages/DashboardPage';
 import LandingPage from './pages/LandingPage';
@@ -110,6 +111,16 @@ function App() {
 
   if (user.role === 'admin') {
     return <AdminPage user={user} onLogout={handleLogout} />;
+  }
+
+  if (user.mustChangePassword) {
+    return (
+      <ChangePasswordPage
+        user={user}
+        onPasswordChanged={setUser}
+        onLogout={handleLogout}
+      />
+    );
   }
 
   if (showMemberSignup && user.membershipStatus !== 'active') {

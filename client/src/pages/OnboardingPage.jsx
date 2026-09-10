@@ -119,8 +119,9 @@ function OnboardingPage({ user, onProfileSaved, onCancel, onBackHome, title, des
         <div className="note-box">
           <strong>Lưu ý:</strong>
           <span>
-            BMI được tính bằng chiều cao và cân nặng. Hình ảnh chỉ dùng để hỗ
-            trợ đánh giá thể trạng trong các bước phát triển tiếp theo.
+            BMI được tính bằng chiều cao và cân nặng. AI sẽ đối chiếu BMI với
+            ảnh thể trạng; nếu hai nguồn dữ liệu quá lệch nhau, hệ thống sẽ
+            yêu cầu bạn kiểm tra và nhập lại.
           </span>
         </div>
       </section>

@@ -2,10 +2,12 @@ import { useState } from 'react';
 import api from '../api';
 import AiPtChat from '../components/AiPtChat';
 import AiPlanPage from './AiPlanPage';
+import AccountInfoPage from './AccountInfoPage';
 import BlogPage from './BlogPage';
 import ExerciseLibraryPage from './ExerciseLibraryPage';
 import PremiumPage from './PremiumPage';
 import TrainingHubPage from './TrainingHubPage';
+import VideoLibraryPage from './VideoLibraryPage';
 import { calculateBmi, getBmiLabel } from '../utils/health';
 
 function DashboardPage({
@@ -21,6 +23,7 @@ function DashboardPage({
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
+  const [isDataMismatch, setIsDataMismatch] = useState(false);
   const isMember = user.membershipStatus === 'active' || user.role === 'admin';
 
   const bmi = calculateBmi(user.heightCm, user.weightKg);
@@ -55,11 +58,14 @@ function DashboardPage({
   async function handleFreeAnalysis() {
     setAiLoading(true);
     setAiError('');
+    setIsDataMismatch(false);
 
     try {
       const response = await api.post('/ai/free-analysis');
       setAiAnalysis(response.data);
     } catch (error) {
+      setAiAnalysis(null);
+      setIsDataMismatch(error.response?.data?.code === 'PROFILE_DATA_MISMATCH');
       setAiError(error.response?.data?.message || 'Không thể phân tích AI');
     } finally {
       setAiLoading(false);
@@ -93,6 +99,13 @@ function DashboardPage({
             Video bài tập
           </button>
           <button
+            className={activePage === 'library' ? 'active-nav' : ''}
+            onClick={() => setActivePage('library')}
+          >
+            <span className="nav-icon" aria-hidden="true">▦</span>
+            Thư viện
+          </button>
+          <button
             className={activePage === 'blog' ? 'active-nav' : ''}
             onClick={() => setActivePage('blog')}
           >
@@ -120,6 +133,19 @@ function DashboardPage({
         <div className="sidebar-plan">
           <span>Tài khoản:</span>
           <strong>{isMember ? 'Member' : 'Visitor'}</strong>
+          <button
+            className="account-profile-button"
+            type="button"
+            onClick={() => setActivePage('account')}
+            title="Thông tin cá nhân"
+            aria-label="Thông tin cá nhân"
+          >
+            {user.avatar ? (
+              <img src={`http://localhost:5000${user.avatar}`} alt="Ảnh avatar" />
+            ) : (
+              <span aria-hidden="true">◉</span>
+            )}
+          </button>
           {!isMember && (
             <button className="sidebar-upgrade-button" type="button" onClick={onUpgradeMember}>
               Mua Member
@@ -141,7 +167,13 @@ function DashboardPage({
           <button onClick={onLogout}>Đăng xuất</button>
         </section>
 
-        {activePage === 'blog' ? (
+        {activePage === 'account' ? (
+          <AccountInfoPage
+            user={user}
+            onEditProfile={onEditProfile}
+            onUserUpdated={onUserUpdated}
+          />
+        ) : activePage === 'blog' ? (
           <BlogPage
             onBack={() => setActivePage('dashboard')}
             onRegister={() => setActivePage('dashboard')}
@@ -151,6 +183,8 @@ function DashboardPage({
           />
         ) : activePage === 'exercises' ? (
           <ExerciseLibraryPage user={user} />
+        ) : activePage === 'library' ? (
+          <VideoLibraryPage user={user} />
         ) : activePage === 'training-hub' ? (
           <TrainingHubPage
             language={language}
@@ -268,7 +302,16 @@ function DashboardPage({
             </button>
           </div>
 
-          {aiError && <p className="form-error">{aiError}</p>}
+          {aiError && (
+            <div className="form-error ai-mismatch-message">
+              <p>{aiError}</p>
+              {isDataMismatch && (
+                <button type="button" className="ghost-button" onClick={onEditProfile}>
+                  Chỉnh sửa hồ sơ
+                </button>
+              )}
+            </div>
+          )}
 
           {aiAnalysis && (
             <div className="ai-result">
@@ -286,8 +329,8 @@ function DashboardPage({
                   <strong>{aiAnalysis.bmi}</strong>
                 </div>
                 <div>
-                  <span>Tình trạng</span>
-                  <strong>{aiAnalysis.bmiStatus}</strong>
+                  <span>Kết luận kết hợp</span>
+                  <strong>{aiAnalysis.assessmentStatus || aiAnalysis.bmiStatus}</strong>
                 </div>
                 <div>
                   <span>Số ảnh đã gửi</span>
@@ -316,6 +359,13 @@ function DashboardPage({
                   )}
 
                   <p>{aiAnalysis.imageAnalysis.visualSummary}</p>
+
+                  {aiAnalysis.imageAnalysis.dataConsistency && (
+                    <p className="small-text">
+                      Đối chiếu ảnh và số liệu:{' '}
+                      <strong>{aiAnalysis.imageAnalysis.dataConsistency}</strong>
+                    </p>
+                  )}
 
                   <div className="image-ai-grid">
                     <div>

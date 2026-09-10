@@ -6,6 +6,163 @@ dotenv.config();
 
 const newExercises = [
   {
+    name: 'Shoulder press với tạ',
+    category: 'gym',
+    muscleGroup: 'Ngực, vai và tay sau',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/qEwKCR5JCog',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=qEwKCR5JCog',
+    description: 'Bài đẩy vai giúp phát triển vai trước và vai giữa, giữ lưng ổn định.',
+    sets: 3,
+    reps: '8-12 lần',
+    restSeconds: 75,
+    needWatchAd: false
+  },
+  {
+    name: 'Dumbbell row',
+    category: 'gym',
+    muscleGroup: 'Lưng và tay trước',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/roCP6wCXPqo',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=roCP6wCXPqo',
+    description: 'Bài kéo một tay giúp rèn lưng và cải thiện khả năng kiểm soát bả vai.',
+    sets: 3,
+    reps: '10-12 lần mỗi bên',
+    restSeconds: 75,
+    needWatchAd: false
+  },
+  {
+    name: 'Bicep curl',
+    category: 'gym',
+    muscleGroup: 'Lưng và tay trước',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/ykJmrZ5v0Oo',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=ykJmrZ5v0Oo',
+    description: 'Bài cuốn tạ cơ bản cho cơ tay trước, ưu tiên nhịp chuyển động chậm.',
+    sets: 3,
+    reps: '10-15 lần',
+    restSeconds: 60,
+    needWatchAd: false
+  },
+  {
+    name: 'Lateral raise',
+    category: 'gym',
+    muscleGroup: 'Ngực, vai và tay sau',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/3VcKaXpzqRo',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=3VcKaXpzqRo',
+    description: 'Bài nâng tạ ngang giúp bổ trợ vai giữa với mức tạ vừa phải.',
+    sets: 3,
+    reps: '12-15 lần',
+    restSeconds: 60,
+    needWatchAd: false
+  },
+  {
+    name: 'Walking lunge',
+    category: 'gym',
+    muscleGroup: 'Chân và mông',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/QOVaHwm-Q6U',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=QOVaHwm-Q6U',
+    description: 'Bài bước chùng giúp rèn chân, mông và khả năng giữ thăng bằng.',
+    sets: 3,
+    reps: '10 lần mỗi bên',
+    restSeconds: 60,
+    needWatchAd: false
+  },
+  {
+    name: 'Calf raise',
+    category: 'gym',
+    muscleGroup: 'Chân và mông',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/-M4-G8p8fmc',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=-M4-G8p8fmc',
+    description: 'Bài nhón gót đơn giản để bổ trợ sức mạnh bắp chân.',
+    sets: 3,
+    reps: '15-20 lần',
+    restSeconds: 45,
+    needWatchAd: false
+  },
+  {
+    name: 'Side plank',
+    category: 'calisthenics',
+    muscleGroup: 'Cardio và core',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/K2VljzCC16g',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=K2VljzCC16g',
+    description: 'Bài giữ người nghiêng giúp rèn cơ liên sườn và khả năng ổn định thân.',
+    sets: 3,
+    reps: '20-30 giây mỗi bên',
+    restSeconds: 45,
+    needWatchAd: false
+  },
+  {
+    name: 'Dead bug',
+    category: 'calisthenics',
+    muscleGroup: 'Cardio và core',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/4XLEnwUr1d8',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=4XLEnwUr1d8',
+    description: 'Bài core kiểm soát giúp giữ lưng ổn định và phối hợp tay chân.',
+    sets: 3,
+    reps: '10 lần mỗi bên',
+    restSeconds: 45,
+    needWatchAd: false
+  },
+  {
+    name: 'Jumping jack',
+    category: 'calisthenics',
+    muscleGroup: 'Toàn thân',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/c4DAnQ6DtF8',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=c4DAnQ6DtF8',
+    description: 'Bài khởi động toàn thân giúp làm nóng cơ thể và tăng nhịp tim.',
+    sets: 3,
+    reps: '30-45 giây',
+    restSeconds: 30,
+    needWatchAd: false
+  },
+  {
+    name: 'Child pose',
+    category: 'yoga',
+    muscleGroup: 'Phục hồi và giãn cơ',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/2MJGg-dUKh0',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=2MJGg-dUKh0',
+    description: 'Tư thế nghỉ giúp thư giãn lưng, hông và hỗ trợ hồi phục sau buổi tập.',
+    sets: 1,
+    reps: '2-3 phút',
+    restSeconds: 0,
+    needWatchAd: true
+  },
+  {
+    name: 'Hip flexor stretch',
+    category: 'stretching',
+    muscleGroup: 'Phục hồi và giãn cơ',
+    level: 'beginner',
+    videoUrl: 'https://www.youtube.com/embed/YQmpO9VT2X4',
+    sourceName: 'YouTube public video',
+    sourceUrl: 'https://www.youtube.com/watch?v=YQmpO9VT2X4',
+    description: 'Động tác giãn cơ gập hông phù hợp sau ngày tập chân hoặc ngồi lâu.',
+    sets: 1,
+    reps: '30-45 giây mỗi bên',
+    restSeconds: 0,
+    needWatchAd: true
+  }
+];
+
+const updatedExercises = [
+  {
     name: 'Pike push-up',
     category: 'calisthenics',
     muscleGroup: 'Ngực, vai và tay sau',
@@ -127,7 +284,7 @@ async function seedVideos() {
   await Exercise.updateOne({ name: 'Giãn cơ toàn thân' }, { muscleGroup: 'Phục hồi và giãn cơ' });
   await Exercise.updateOne({ name: 'Yoga thư giãn' }, { muscleGroup: 'Phục hồi và giãn cơ' });
 
-  for (const exercise of newExercises) {
+  for (const exercise of [...newExercises, ...updatedExercises]) {
     await Exercise.findOneAndUpdate(
       { name: exercise.name },
       exercise,
