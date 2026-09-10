@@ -118,23 +118,6 @@ const userSchema = new mongoose.Schema(
       ],
       default: []
     },
-    aiTrialStart: {
-      type: Date,
-      default: Date.now
-    },
-    hasAiPremium: {
-      type: Boolean,
-      default: false
-    },
-    aiPlan: {
-      type: String,
-      enum: ['free', 'plus', 'pro'],
-      default: 'free'
-    },
-    hasNoAds: {
-      type: Boolean,
-      default: false
-    },
     membershipStatus: {
       type: String,
       enum: ['inactive', 'active', 'cancelled'],

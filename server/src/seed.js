@@ -207,16 +207,14 @@ async function seedData() {
       role: 'user',
       heightCm: 170,
       weightKg: 68,
-      goal: 'Giam mo va tang suc ben',
+      goal: 'Giảm mỡ',
       trainingLevel: 'beginner'
     },
     {
       fullName: 'Admin Fitness',
       email: 'admin@gmail.com',
       password,
-      role: 'admin',
-      hasAiPremium: true,
-      hasNoAds: true
+      role: 'admin'
     }
   ]);
 

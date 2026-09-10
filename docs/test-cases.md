@@ -1,18 +1,33 @@
-# QA Test Cases
+# Bảng kiểm thử QA
 
-| Ma test | Chuc nang | Buoc test | Ket qua mong doi |
+| Mã | Chức năng | Cách kiểm tra | Kết quả mong đợi |
 | --- | --- | --- | --- |
-| TC01 | Dang ky | Nhap ten, email, mat khau hop le | Tao tai khoan thanh cong |
-| TC02 | Dang nhap | Dang nhap bang email va mat khau dung | Vao duoc dashboard |
-| TC03 | Dang nhap sai | Nhap sai mat khau | Hien thong bao loi |
-| TC04 | BMI | Nhap 170cm va 70kg | BMI xap xi 24.2 |
-| TC05 | BMI loi | Bo trong chieu cao hoac can nang | Khong tao plan va hien loi |
-| TC06 | AI plan | Nhap muc tieu, so ngay tap, thoi luong | Tao ke hoach theo thong tin da nhap |
-| TC07 | Trial AI | User moi dang ky | Co trang thai free trial |
-| TC08 | Het trial | Gia lap user het trial | Bi gioi han tao AI plan |
-| TC09 | Quang cao | Tap qua 2-5 bai | Quang cao co the xuat hien |
-| TC10 | Tat quang cao | User co goi no-ads | Khong hien quang cao |
-| TC11 | Noi dung phu | Mo yoga/gian co/kegel | Yeu cau xem quang cao neu chua premium |
-| TC12 | Admin | Dang nhap bang admin | Vao duoc man quan tri |
-| TC13 | Quan ly bai tap | Admin them bai tap moi | Bai tap hien trong danh sach |
-| TC14 | Responsive co ban | Thu nho cua so trinh duyet | Giao dien khong bi vo nghiem trong |
+| TC01 | Đăng ký | Nhập đủ thông tin và hai mật khẩu giống nhau | Tạo tài khoản thành công |
+| TC02 | Đăng ký lỗi | Nhập hai mật khẩu khác nhau | Hiện thông báo và không tạo tài khoản |
+| TC03 | Đăng nhập | Nhập đúng email và mật khẩu | Vào đúng trang tiếp theo |
+| TC04 | Đăng nhập sai | Nhập sai mật khẩu | Hiện lỗi tiếng Việt |
+| TC05 | Quên mật khẩu | Nhập email, mã xác minh và mật khẩu mới | Đổi mật khẩu thành công |
+| TC06 | Hồ sơ | Nhập 170 cm và 70 kg | BMI khoảng 24,2 |
+| TC07 | Hồ sơ lỗi | Bỏ trống chiều cao hoặc cân nặng | Không lưu và yêu cầu nhập lại |
+| TC08 | Nhiều ảnh | Chọn ảnh chính diện, nghiêng và sau lưng | Hiển thị đủ ảnh đã chọn |
+| TC09 | Đối chiếu ảnh | Nhập số liệu không phù hợp với ảnh | Hiện “Thông tin chưa phù hợp, vui lòng kiểm tra và nhập lại” |
+| TC10 | Kế hoạch AI | Chọn mục tiêu, số buổi và thời lượng | Lịch được tạo đúng lựa chọn |
+| TC11 | Lưu lịch | Đổi tần suất rồi tải lại trang | Lựa chọn mới vẫn được giữ |
+| TC12 | Video theo lịch | Chọn một ngày có nhóm cơ | Video bên dưới cùng nhóm cơ |
+| TC13 | Thư viện | Tìm “tay sau” hoặc “plank” | Chỉ hiện nội dung phù hợp |
+| TC14 | Lọc thư viện | Chọn nhóm cơ và trình độ | Danh sách thay đổi đúng bộ lọc |
+| TC15 | Hoàn thành tuần | Tick đủ buổi rồi bấm hoàn tất | Chuyển sang tuần kế tiếp |
+| TC16 | Bỏ lỡ buổi | Chọn “chưa tập, sắp xếp lại” | Hệ thống đổi sang ngày còn trống |
+| TC17 | Bữa ăn | Ghi “cơm tấm”, “phở” hoặc “mì gói” | Có kcal ước tính và cập nhật tổng kcal |
+| TC18 | Thiếu ngủ | Nhập dưới 8 giờ ngủ | Hiện khuyến nghị tập nhẹ |
+| TC19 | Blog | Member gửi bài viết | Bài ở trạng thái chờ duyệt |
+| TC20 | Duyệt blog | Admin duyệt nhiều bài liên tiếp | Bài được sắp xếp theo thứ tự gửi |
+| TC21 | Admin video | Admin thêm link video hợp lệ | Video xuất hiện trong thư viện |
+| TC22 | Link video lỗi | Nhập link private hoặc Shorts | API từ chối và báo lỗi |
+| TC23 | Quản lý Member | Admin xem danh sách tài khoản | Có thể cấp lại mật khẩu hoặc xóa tài khoản |
+| TC24 | Quyền truy cập | User thường mở API admin | API trả về lỗi không có quyền |
+| TC25 | Giao diện | Thu nhỏ cửa sổ trình duyệt | Bố cục không bị tràn nghiêm trọng |
+
+## Cách ghi kết quả
+
+Khi chạy thử, có thể thêm cột `Kết quả thực tế` và `Đạt/Không đạt`. Nếu lỗi, ghi lại bước tái hiện và ảnh chụp màn hình để dễ sửa.
