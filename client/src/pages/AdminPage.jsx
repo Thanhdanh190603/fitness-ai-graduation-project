@@ -128,8 +128,8 @@ function AdminPage({ user, onLogout }) {
     event.preventDefault();
     setFormMessage('');
 
-    if (!form.name.trim() || !form.muscleGroup.trim() || !form.videoUrl.trim()) {
-      setFormMessage('Vui lòng nhập tên bài, nhóm cơ và đường dẫn video.');
+    if (!form.name.trim() || !form.muscleGroup.trim() || (!form.videoUrl.trim() && !form.sourceUrl.trim())) {
+      setFormMessage('Vui lòng nhập tên bài, nhóm cơ và ít nhất một đường dẫn video.');
       return;
     }
 
@@ -291,9 +291,9 @@ function AdminPage({ user, onLogout }) {
             <label>Nhóm bài<select name="category" value={form.category} onChange={updateForm}>{Object.entries(categoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
             <label>Nhóm cơ<input name="muscleGroup" value={form.muscleGroup} onChange={updateForm} placeholder="Ví dụ: Ngực, vai, tay sau" /></label>
             <label>Trình độ<select name="level" value={form.level} onChange={updateForm}>{Object.entries(levelLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-            <label>Link video nhúng<input name="videoUrl" value={form.videoUrl} onChange={updateForm} placeholder="https://www.youtube.com/embed/..." /></label>
+            <label>Link video nhúng (không bắt buộc)<input name="videoUrl" value={form.videoUrl} onChange={updateForm} placeholder="https://www.youtube.com/embed/..." /></label>
             <label>Tên nguồn video<input name="sourceName" value={form.sourceName} onChange={updateForm} placeholder="Ví dụ: YouTube - Fitness Blender" /></label>
-            <label>Link nguồn<input name="sourceUrl" value={form.sourceUrl} onChange={updateForm} placeholder="https://www.youtube.com/watch?v=..." /></label>
+            <label>Link nguồn (không bắt buộc)<input name="sourceUrl" value={form.sourceUrl} onChange={updateForm} placeholder="https://youtu.be/... hoặc https://www.youtube.com/watch?v=..." /></label>
             <label>Mô tả<textarea name="description" value={form.description} onChange={updateForm} rows="3" placeholder="Mô tả ngắn cho người tập" /></label>
             <div className="admin-form-grid admin-form-grid-small">
               <label>Số hiệp<input name="sets" type="number" min="1" value={form.sets} onChange={updateForm} /></label>

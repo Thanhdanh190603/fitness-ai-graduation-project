@@ -7,6 +7,50 @@ function isPublicVideoUrl(videoUrl) {
     && !value.includes('/shorts/');
 }
 
+function getYouTubeVideoId(value) {
+  try {
+    const url = new URL(String(value || '').trim());
+
+    if (url.hostname === 'youtu.be') {
+      return url.pathname.slice(1).split('/')[0];
+    }
+
+    if (url.hostname.includes('youtube.com')) {
+      if (url.pathname === '/watch') {
+        return url.searchParams.get('v');
+      }
+
+      if (url.pathname.startsWith('/embed/')) {
+        return url.pathname.split('/')[2];
+      }
+    }
+  } catch (error) {
+    return null;
+  }
+
+  return null;
+}
+
+function normalizeVideoLinks(input, oldExercise = {}) {
+  const videoUrl = String(input.videoUrl || oldExercise.videoUrl || '').trim();
+  const sourceUrl = String(input.sourceUrl || oldExercise.sourceUrl || '').trim();
+  let embedUrl = videoUrl;
+
+  if (!embedUrl && sourceUrl) {
+    const videoId = getYouTubeVideoId(sourceUrl);
+
+    if (videoId) {
+      embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    }
+  }
+
+  return {
+    ...input,
+    videoUrl: embedUrl,
+    sourceUrl
+  };
+}
+
 function formatExercise(exercise) {
   const data = exercise.toObject ? exercise.toObject() : exercise;
 
@@ -53,11 +97,13 @@ async function getExerciseById(req, res) {
 
 async function createExercise(req, res) {
   try {
-    if (!isPublicVideoUrl(req.body.videoUrl)) {
-      return res.status(400).json({ message: 'Video phải là đường dẫn YouTube/Vimeo công khai, không dùng video riêng tư.' });
+    const exerciseData = normalizeVideoLinks(req.body);
+
+    if (!isPublicVideoUrl(exerciseData.videoUrl)) {
+      return res.status(400).json({ message: 'Hãy nhập link nhúng hoặc link nguồn YouTube/Vimeo công khai.' });
     }
 
-    const exercise = await Exercise.create(req.body);
+    const exercise = await Exercise.create(exerciseData);
     res.status(201).json(exercise);
   } catch (error) {
     res.status(400).json({ message: 'Lỗi thêm bài tập' });
@@ -66,19 +112,23 @@ async function createExercise(req, res) {
 
 async function updateExercise(req, res) {
   try {
-    if (req.body.videoUrl && !isPublicVideoUrl(req.body.videoUrl)) {
-      return res.status(400).json({ message: 'Video phải là đường dẫn YouTube/Vimeo công khai, không dùng video riêng tư.' });
+    const currentExercise = await Exercise.findById(req.params.id);
+
+    if (!currentExercise) {
+      return res.status(404).json({ message: 'Không tìm thấy bài tập' });
+    }
+
+    const exerciseData = normalizeVideoLinks(req.body, currentExercise);
+
+    if (!isPublicVideoUrl(exerciseData.videoUrl)) {
+      return res.status(400).json({ message: 'Hãy nhập link nhúng hoặc link nguồn YouTube/Vimeo công khai.' });
     }
 
     const exercise = await Exercise.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      exerciseData,
       { new: true, runValidators: true }
     );
-
-    if (!exercise) {
-      return res.status(404).json({ message: 'Không tìm thấy bài tập' });
-    }
 
     res.json(exercise);
   } catch (error) {
