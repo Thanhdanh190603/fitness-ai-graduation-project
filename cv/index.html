@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CV | Thanh Danh</title>
+    <meta name="description" content="View or download Thanh Danh's CV.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23070611'/%3E%3Cpath d='M18 37 9 32l9-5v6l10-10h8L22 37h-4Zm28-10 9 5-9 5v-6L36 41h-8l14-14h4Z' fill='%23d24cff'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" href="/">ThanhDanh</a>
+        <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+        <div class="nav-links">
+          <a href="/">⌂ Home</a>
+          <a href="/about/">♙ About</a>
+          <a href="/project/">▣ Projects</a>
+          <a class="active" href="/cv/">▤ CV</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="page">
+      <section class="cv-hero" aria-labelledby="cv-title">
+        <div>
+          <p class="eyebrow">Resume · PDF</p>
+          <h1 class="section-title" id="cv-title">Thanh Danh <span class="accent">CV</span></h1>
+          <p class="cv-note">A quick overview of my background, skills and project experience.</p>
+        </div>
+        <div class="cv-actions">
+          <a class="button" href="/assets/thanh-danh-cv.pdf" target="_blank" rel="noreferrer">View CV</a>
+          <a class="button secondary" href="/assets/thanh-danh-cv.pdf" download>Download CV</a>
+        </div>
+      </section>
+
+      <section class="cv-panel" aria-label="CV preview">
+        <object class="pdf-frame" data="/assets/thanh-danh-cv.pdf" type="application/pdf">
+          <p>Your browser cannot preview this PDF. <a href="/assets/thanh-danh-cv.pdf">Open the CV here.</a></p>
+        </object>
+      </section>
+    </main>
+
+    <footer class="site-footer">© 2026 Thanh Danh</footer>
+    <script src="/app.js"></script>
+  </body>
+</html>
